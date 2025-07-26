@@ -119,7 +119,7 @@ export class EnrollmentService {
     enrollment: Enrollment,
     studentCode: string
   ) {
-    const totalAmount = dto.totalCost - (dto.discounts || 0);
+    const totalAmount = dto.totalCost - (dto.discounts || 0) - (dto.initialPayment || 0);
     const numberOfInstallments = dto.credit ? dto.numInstallments || 4 : 1;
     const amountPerInstallment = totalAmount / numberOfInstallments;
     // Crear cuenta por cobrar para carnet si no ha sido pagado

@@ -46,7 +46,7 @@ export class AccountReceivableService {
   async findByCodeStudent(codeStudent: string): Promise<AccountReceivable[]> {
      const account = await this.prismaService.accountReceivable.findMany({
       where:{ concept : { contains: codeStudent } },
-      orderBy: { dueDate: 'desc' },
+      orderBy: { dueDate: 'asc' },
       include: { student: true, payments: true },
     });
 
