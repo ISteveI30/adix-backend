@@ -1,12 +1,13 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseEnumPipe } from '@nestjs/common';
 import { EnrollmentService } from './enrollment.service';
 import { CreateEnrollmentDto } from './dto/create-enrollment.dto';
 import { UpdateEnrollmentDto } from './dto/update-enrollment.dto';
 import { PaginationDto } from 'src/common';
+import { Modality } from '@prisma/client';
 
 @Controller('enrollments')
 export class EnrollmentController {
-  constructor(private readonly enrollmentService: EnrollmentService) {}
+  constructor(private readonly enrollmentService: EnrollmentService) { }
 
   @Post()
   create(@Body() createEnrollmentDto: CreateEnrollmentDto) {
@@ -14,8 +15,21 @@ export class EnrollmentController {
   }
 
   @Get()
-  findAll(@Query() paginationDto:PaginationDto) {
+  findAll(@Query() paginationDto: PaginationDto) {
     return this.enrollmentService.findAll(paginationDto);
+  }
+
+  @Get('actives')
+  findActives(
+    @Query('cycleId') cycleId?: string,
+    @Query('careerId') careerId?: string,
+    @Query('modality') modality?: Modality, // 👈 convierte string a enum
+  ) {
+    return this.enrollmentService.findActives({
+      cycleId,
+      careerId,
+      modality,
+    });
   }
 
   @Get(':id')
@@ -32,4 +46,7 @@ export class EnrollmentController {
   remove(@Param('id') id: string) {
     return this.enrollmentService.remove(id);
   }
+
+
+
 }

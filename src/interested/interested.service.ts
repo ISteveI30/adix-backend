@@ -11,63 +11,87 @@ export class InterestedService {
     private readonly prismaService: PrismaService,
   ) { }
 
-  async create(createInterestedDto: CreateInterestedDto) {
+  //async create(createInterestedDto: CreateInterestedDto) {
+  //
+  //  const data = await this.prismaService.interested.create({
+  //    data: {
+  //      ...createInterestedDto,
+  //    },
+  //  });
+  //  return data;
+  //}
 
-    const data = await this.prismaService.interested.create({
+  async create(createInterestedDto: CreateInterestedDto) {
+    return await this.prismaService.interested.create({
       data: {
-        ...createInterestedDto,
+        firstName: createInterestedDto.firstName,
+        lastName: createInterestedDto.lastName,
+        email: createInterestedDto.email,
+        phone1: createInterestedDto.phone1,
+        phone2: createInterestedDto.phone2,
+        careerId: createInterestedDto.careerId,
+        cycleId: createInterestedDto.cycleId,
+      },
+      include: {
+        career: true,
+        cycle: true,
       },
     });
-    return data;
   }
 
-  async findAll(paginationDto: PaginationDto): Promise<{ meta: MetaDtoPagination, data: CreateInterestedDto[] }> {
+
+  async findAll(paginationDto: PaginationDto): Promise<{ meta: MetaDtoPagination, data: any[] }> {
     const { page, limit } = paginationDto;
     const skip = (page - 1) * limit;
     const take = limit || 10;
 
-    const total = await this.prismaService.interested.count({
-      where: { deletedAt: null },
-    });
+    const where = { deletedAt: null };
+
+    const include = {
+      career: {
+        select: {
+          id: true,
+          name: true,
+          areaId: true,
+          area: { select: { id: true, name: true } },
+        },
+      },
+      cycle: { select: { id: true, name: true } },
+    };
+
+    const total = await this.prismaService.interested.count({ where });
 
     if (!limit) {
-      const interested = await this.prismaService.interested.findMany({
-        where: { deletedAt: null },
-      });
-      return {
-        meta: {
-          total,
-          lastPage: 1,
-          page,
-        },
-        data: interested,
-      };
+      const interested = await this.prismaService.interested.findMany({ where, include });
+      return { meta: { total, lastPage: 1, page }, data: interested };
     }
 
     const lastPage = Math.ceil(total / limit);
+    const interested = await this.prismaService.interested.findMany({ where, include, take, skip });
 
-    const interested = await this.prismaService.interested.findMany({
-      where: { deletedAt: null },
-      take,
-      skip,
-    });
-
-    return {
-      meta: {
-        total,
-        lastPage,
-        page,
-      },
-      data: interested,
-    }
+    return { meta: { total, lastPage, page }, data: interested };
   }
 
   async findOne(id: string) {
     const interested = await this.prismaService.interested.findUnique({
       where: { id },
+      include: {
+        career: {
+          include: {
+            area: true,
+          },
+        },
+        cycle: true,
+      },
     });
+
+    if (!interested) {
+      throw new NotFoundException(`Interested with id ${id} not found`);
+    }
+
     return interested;
   }
+
 
   async update(id: string, updateInterestedDto: UpdateInterestedDto) {
     const data = await this.prismaService.interested.update({
@@ -98,7 +122,7 @@ export class InterestedService {
     const deletedOld = await this.prismaService.interested.deleteMany({
       where: {
         createdAt: {
-          lte: cutoff,    
+          lte: cutoff,
         },
       },
     });

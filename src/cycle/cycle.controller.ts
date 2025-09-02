@@ -12,7 +12,7 @@ export class CycleController {
     return this.cycleService.create(createCycleDto);
   }
 
-  @Get()
+  @Get('')
   findAll() {
     return this.cycleService.findAll();
   }

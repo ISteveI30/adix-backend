@@ -82,25 +82,7 @@ export class StudentService {
       });
   }
 
-  async findStudentByName(query: string) {
-    const result = await this.prismaService.student.findMany({
-      where: {
-        OR: [
-          { firstName: { contains: query, mode: 'insensitive' } },
-          { lastName: { contains: query, mode: 'insensitive' } },
-          { tutorId: { contains: query, mode: 'insensitive' } },
-        ],
-        deletedAt: null
-      },
-      include: {
-        tutor: true,
-        enrollments: true,
-        accountReceivable: true,
-      },
-    });
 
-    return result;
-  }
 
 
   async update(id: string, updateStudentDto: UpdateStudentDto) {
@@ -142,23 +124,69 @@ export class StudentService {
       state
     }
   }
+
+  async findStudentByName(query: string) {
+    const result = await this.prismaService.student.findMany({
+      where: {
+        OR: [
+          { firstName: { contains: query, mode: 'insensitive' } },
+          { lastName: { contains: query, mode: 'insensitive' } },
+          { tutorId: { contains: query, mode: 'insensitive' } },
+        ],
+        deletedAt: null
+      },
+      include: {
+        tutor: true,
+        enrollments: true,
+        accountReceivable: true,
+      },
+    });
+
+    return result;
+  }
+
   async findByDni(dni: string) {
-  return this.prismaService.student.findUnique({
-    where: { dni },      
-    select: {
-      id: true,
-      firstName: true,
-      lastName:  true,
-      enrollments: {
-        orderBy: { startDate: 'desc' },
-        take: 1,
-        select: {
-          cycle: { select: { name: true } },
-          admission: { select: { name: true } }
+    return this.prismaService.student.findUnique({
+      where: { dni },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        enrollments: {
+          orderBy: { startDate: 'desc' },
+          take: 1,
+          select: {
+            cycle: { select: { name: true } },
+            admission: { select: { name: true } }
+          }
         }
       }
-    }
-  });
+    });
   }
+
+  async findByNameForAttendance() {
+    return this.prismaService.student.findMany({
+      orderBy: [
+        { lastName: 'asc' },
+        { firstName: 'asc' },
+      ],
+      select: {
+        id: true,
+        dni: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        phone: true,
+        address: true,
+        school: true,
+        birthday: true,
+        createdAt: true,
+      },
+    });
+  }
+
+
+
+
 
 }

@@ -13,10 +13,7 @@ export class StudentController {
     return await this.studentService.create(createStudentDto);
   }
 
-  @Get('/findStudentByName')
-  async findStudentByName(@Query('query') query: string) {
-    return await this.studentService.findStudentByName(query);
-  }
+
 
   @Get()
   async findAll(@Query() paginationDto: PaginationDto) {
@@ -38,10 +35,21 @@ export class StudentController {
     return await this.studentService.remove(id);
   }
 
+  @Get('/findStudentByName')
+  async findStudentByName(@Query('query') query: string) {
+    return await this.studentService.findStudentByName(query);
+  }
+
   @Get("findByDni/:dni")
   async getByDni(@Param("dni") dni: string) {
     const student = await this.studentService.findByDni(dni);
     if (!student) throw new NotFoundException("Alumno no encontrado");
     return student;
   }
+
+  @Get('findStudentByNameFull')
+  async findStudentByNameFull() {
+    return await this.studentService.findByNameForAttendance();
+  }
+
 }

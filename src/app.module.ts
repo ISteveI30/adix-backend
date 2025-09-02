@@ -10,7 +10,6 @@ import { AccountReceivableModule } from './account-receivable/account-receivable
 import { PaymentModule } from './payment/payment.module';
 import { InterestedModule } from './interested/interested.module';
 import { AttendanceModule } from './attendance/attendance.module';
-import { ExternalModule } from './external/external.module';
 import { ExamModule } from './exam/exam.module';
 @Module({
   imports: [
@@ -24,7 +23,6 @@ import { ExamModule } from './exam/exam.module';
     AccountReceivableModule, 
     PaymentModule, 
     InterestedModule,
-    ExternalModule,
     ExamModule, 
     AttendanceModule],
 })

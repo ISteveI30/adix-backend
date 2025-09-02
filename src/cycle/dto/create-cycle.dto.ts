@@ -3,7 +3,7 @@ import { IsDate, IsNotEmpty, IsOptional, IsString } from "class-validator"
 export class CreateCycleDto {
   @IsString()
   @IsNotEmpty()
-  name     :string 
+  name: string
 
   @IsDate()
   createdAt: Date;
@@ -17,5 +17,11 @@ export class CreateCycleDto {
 
   // enrollments  :Enrollment[]
   // exams        :Exam[]
+  @IsString()
+  @IsNotEmpty()
+  careerId: string;
 
+  @IsString()
+  @IsNotEmpty()
+  cycleId: string;
 }

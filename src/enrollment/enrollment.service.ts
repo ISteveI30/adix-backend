@@ -6,8 +6,11 @@ import { Prisma, Enrollment, PaymentStatus, PaymentMethod } from '@prisma/client
 import { AccountReceivableService } from 'src/account-receivable/account-receivable.service';
 import { PaymentService } from 'src/payment/payment.service';
 import { PaginationDto } from 'src/common';
+import { Modality /*, EnrollmentStatus*/ } from '@prisma/client';
 
 type CompatibleUpdateEnrollmentDto = Omit<UpdateEnrollmentDto, 'student' | 'tutor'>;
+
+export type ActivesFilters = { cycleId?: string; careerId?: string; modality?: Modality };
 
 @Injectable()
 export class EnrollmentService {
@@ -109,7 +112,7 @@ export class EnrollmentService {
     if (error instanceof Prisma.PrismaClientUnknownRequestError) {
       throw new InternalServerErrorException('Error desconocido de Prisma');
     }
-    
+
     this.logger.error('Error creating enrollment', error.stack);
     throw new InternalServerErrorException('Failed to create enrollment');
   }
@@ -380,7 +383,7 @@ export class EnrollmentService {
           accountReceivableId: hasActiveReceivables[0].id,
         },
       });
-      
+
       while (hasActiveReceivables.length > 0) {
         const accountReceivable = hasActiveReceivables.pop();
         if (accountReceivable) {
@@ -390,7 +393,7 @@ export class EnrollmentService {
           });
         }
       }
-      
+
       if (hasPayments) {
         while (hasPayments.length > 0) {
           const payment = hasPayments.pop();
@@ -407,4 +410,19 @@ export class EnrollmentService {
     // Si no hay cuentas por cobrar activas ni pagos, eliminar la matrícula
     return await this.prismaService.enrollment.update({ where: { id }, data: { deletedAt: new Date() } });
   }
+
+
+  async findActives(filters: { cycleId?: string; careerId?: string; modality?: Modality }) {
+    const where: any = { deletedAt: null };
+    if (filters.cycleId) where.cycleId = filters.cycleId;
+    if (filters.careerId) where.careerId = filters.careerId;
+    if (filters.modality) where.modality = filters.modality;
+
+    return this.prismaService.enrollment.findMany({
+      where,
+      include: { student: true, career: true },
+    });
+  }
+
+
 }

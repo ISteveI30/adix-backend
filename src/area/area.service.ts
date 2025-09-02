@@ -8,7 +8,7 @@ export class AreaService {
 
   constructor(
     private readonly prisma: PrismaService
-  ) {}
+  ) { }
 
   async create(createAreaDto: CreateAreaDto) {
     return await this.prisma.area.create({
@@ -38,7 +38,7 @@ export class AreaService {
     return result;
   }
 
- async update(id: string, updateAreaDto: UpdateAreaDto) {
+  async update(id: string, updateAreaDto: UpdateAreaDto) {
     return await this.prisma.area.update({
       where: {
         id

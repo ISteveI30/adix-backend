@@ -15,10 +15,18 @@ export class CreateInterestedDto {
   email: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   phone1: string;
 
   @IsOptional()
   @IsString()
   phone2?: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  careerId: string;
+
+  @IsString()
+  @IsNotEmpty()
+  cycleId: string;
 }

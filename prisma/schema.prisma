@@ -57,7 +57,6 @@ enum StatusExam {
   DESAPROBADO
 }
 
-
 model Interested {
   id        String  @id @default(uuid())
   firstName String
@@ -69,6 +68,14 @@ model Interested {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+
+  careerId String
+  career   Career @relation(fields: [careerId], references: [id])
+
+  cycleId String
+  cycle   Cycle  @relation(fields: [cycleId], references: [id])
+
+  examDetails ExamDetail[] @relation("InterestedExamDetails")
 }
 
 model Tutor {
@@ -112,30 +119,23 @@ model Student {
   accountReceivable AccountReceivable[]
 }
 
-model External{
-  id        String    @id @default(uuid())
-  dni       String    @unique
-  firstName String
-  lastName  String
-  registrations  ExamDetail[]
-}
-
 model ExamDetail {
-  id          String     @id @default(uuid())
-  examId      String
-  exam        Exam       @relation(fields: [examId], references: [id])
+  id     String @id @default(uuid())
+  examId String
+  exam   Exam   @relation(fields: [examId], references: [id])
 
-  studentId   String?    
-  student     Student?   @relation(fields: [studentId], references: [id])
+  studentId String?
+  student   Student? @relation(fields: [studentId], references: [id])
 
-  externalId  String?    
-  external    External?  @relation(fields: [externalId], references: [id])
+  interestedId String?
+  interested   Interested? @relation("InterestedExamDetails", fields: [interestedId], references: [id])
 
-  score       Int?
-  status      StatusExam? 
-  registered  DateTime   @default(now())
+  score      Int?
+  status     StatusExam?
+  registered DateTime    @default(now())
 
-  @@unique([examId, studentId, externalId], name: "uniqueExam")
+  @@unique([examId, studentId])
+  @@unique([examId, interestedId])
 }
 
 model Exam {
@@ -149,11 +149,10 @@ model Exam {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  cycleId String
-  cycle   Cycle    @relation(fields: [cycleId], references: [id])
+  cycleId     String
+  cycle       Cycle        @relation(fields: [cycleId], references: [id])
   examdetails ExamDetail[]
 }
-
 
 model Area {
   id          String    @id @default(uuid())
@@ -179,6 +178,7 @@ model Career {
   areaId      String
   area        Area         @relation(fields: [areaId], references: [id])
   enrollments Enrollment[]
+  Interested  Interested[]
 }
 
 model Cycle {
@@ -190,6 +190,7 @@ model Cycle {
 
   enrollments Enrollment[]
   exams       Exam[]
+  Interested  Interested[]
 }
 
 model Admission {
@@ -203,7 +204,6 @@ model Admission {
 
   enrollments Enrollment[]
 }
-
 
 //model Result {
 //  id        String    @id @default(uuid())
@@ -229,7 +229,7 @@ model Attendance {
 
   status    StatusAttendance
   studentId String
-  student   Student @relation(fields: [studentId], references: [id])
+  student   Student          @relation(fields: [studentId], references: [id])
 }
 
 model Enrollment {

@@ -20,9 +20,16 @@ export class CycleService {
     );
   }
 
+
+  //findOne(id: string) {
+  //  return this.prismaService.cycle.findUnique(
+  //    { where: { id, deletedAt: null } });
+  //}
+
   findOne(id: string) {
-    return this.prismaService.cycle.findUnique(
-      { where: { id, deletedAt: null } });
+    return this.prismaService.cycle.findFirst({
+      where: { id, deletedAt: null },
+    });
   }
 
   update(id: string, updateCycleDto: UpdateCycleDto) {
