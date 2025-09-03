@@ -31,7 +31,8 @@ enum StatusAttendance {
   ASISTIO
   TARDANZA
   FALTA
-  FALTA_JUSTIFICADA @map("FALTA JUSTIFICADA")
+  FALTA_JUSTIFICADA    @map("FALTA JUSTIFICADA")
+  TARDANZA_JUSTIFICADA @map("TARDANZA JUSTIFICADA")
 }
 
 enum Shift {
@@ -83,8 +84,8 @@ model Tutor {
   dni         String    @unique
   firstName   String
   lastName    String
-  email       String    @unique
-  phone1      String
+  email       String?   @unique
+  phone1      String?
   phone2      String?
   type        TutorType
   observation String?
@@ -100,7 +101,7 @@ model Student {
   dni       String?   @unique //se esta cambiando para que solo exista un dni por alumno
   firstName String
   lastName  String
-  email     String    @unique
+  email     String?   @unique
   phone     String?
   address   String?
   image     String?
@@ -131,9 +132,9 @@ model ExamDetail {
   interested   Interested? @relation("InterestedExamDetails", fields: [interestedId], references: [id])
 
   //score      Int?
-  goodAnswers  Int?   @default(0) 
-  wrongAnswers Int?   @default(0) 
-  totalScore   Int?   @default(0) 
+  goodAnswers  Int? @default(0)
+  wrongAnswers Int? @default(0)
+  totalScore   Int? @default(0)
 
   status     StatusExam?
   registered DateTime    @default(now())
@@ -231,9 +232,9 @@ model Attendance {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  status    StatusAttendance
-  studentId String
-  student   Student          @relation(fields: [studentId], references: [id])
+  status            StatusAttendance
+  studentId         String
+  student           Student          @relation(fields: [studentId], references: [id])
 }
 
 model Enrollment {

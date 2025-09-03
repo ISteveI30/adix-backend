@@ -48,8 +48,8 @@ export class StudentController {
   }
 
   @Get('findStudentByNameFull')
-  async findStudentByNameFull() {
-    return await this.studentService.findByNameForAttendance();
+  async findStudentByNameFull(@Query('query') query: string) {
+    return this.studentService.findByNameForAttendance(query);
   }
 
 }

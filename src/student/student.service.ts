@@ -164,25 +164,42 @@ export class StudentService {
     });
   }
 
-  async findByNameForAttendance() {
+  async findByNameForAttendance(query: string) {
+    const q = (query ?? '').trim();
+    if (!q) return [];
+
+    const lastAdm = await this.prismaService.admission.findFirst({
+      where: { deletedAt: null },
+      orderBy: [{ startAt: 'desc' }, { createdAt: 'desc' }],
+      select: { id: true },
+    });
+    const lastAdmissionId = lastAdm?.id;
+
     return this.prismaService.student.findMany({
-      orderBy: [
-        { lastName: 'asc' },
-        { firstName: 'asc' },
-      ],
+      where: {
+        deletedAt: null,
+        OR: [
+          { firstName: { contains: q, mode: 'insensitive' } },
+          { lastName:  { contains: q, mode: 'insensitive' } },
+        ],
+        enrollments: {
+          some: {
+            deletedAt: null,
+            ...(lastAdmissionId ? { admissionId: lastAdmissionId } : {}),
+          }
+        }
+      },
+      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
       select: {
-        id: true,
-        dni: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        phone: true,
-        address: true,
-        school: true,
-        birthday: true,
-        createdAt: true,
+        id: true, dni: true, firstName: true, lastName: true,
+        enrollments: {
+          orderBy: { startDate: 'desc' }, take: 1,
+          select: { cycle: { select: { name: true } }, admission: { select: { name: true } } }
+        }
       },
     });
+
+    
   }
 
 
