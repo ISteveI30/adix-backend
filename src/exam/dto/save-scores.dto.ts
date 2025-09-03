@@ -2,16 +2,13 @@
 import { Type } from 'class-transformer';
 import { IsArray, IsInt, IsOptional, IsUUID, Max, Min, ValidateNested } from 'class-validator';
 
-export class ScoreRowDto {
-  @IsUUID('4')
-  detailId!: string;
 
-  // score es opcional y puede ser null. Si viene, debe ser entero 0..20
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  @Max(20)
-  score?: number | null;
+export class ScoreRowDto {
+  @IsUUID('4') detailId!: string;
+
+  @IsOptional() @IsInt() @Min(0) @Max(100) goodAnswers?: number | null;
+  @IsOptional() @IsInt() @Min(0) @Max(100) wrongAnswers?: number | null;
+  @IsOptional() @IsInt() @Min(0) @Max(400) totalScore?: number | null;
 }
 
 export class SaveScoresDto {

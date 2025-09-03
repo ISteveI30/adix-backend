@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Param, Patch, Put } from "@nestjs/common";
+import { Body, Controller, Post, Get, Param, Patch, Put, Delete } from "@nestjs/common";
 import { ExamService } from "./exam.service";
 import { CreateExamDto } from "./dto/create-exam.dto";
 import { CreateExamWithDetailsDto } from "./dto/create-exam-with-details.dto";
@@ -15,8 +15,7 @@ export class ExamController {
   create(@Body() dto: CreateExamDto) {
     return this.examService.create(dto);
   }
-  @Post("create-with-details")
-  createWithDetails(@Body() dto: CreateExamWithDetailsDto) {
+  @Post("create-with-details") createWithDetails(@Body() dto: CreateExamWithDetailsDto) {
     return this.examService.createWithDetails(dto);
   }
   @Get('summary')
@@ -39,20 +38,26 @@ export class ExamController {
     return this.examService.update(id, dto);
   }
 
-  // NUEVO: roster + sincronización + notas
-  @Get(':id/roster')
-  roster(@Param('id') id: string) {
-    return this.examService.roster(id);
-  }
-
-  @Put(':id/participants')
-  sync(@Param('id') id: string, @Body() dto: SyncParticipantsDto) {
+  @Get(':id/roster') roster(@Param('id') id: string) { return this.examService.roster(id); }
+  @Put(':id/participants') sync(@Param('id') id: string, @Body() dto: SyncParticipantsDto) {
     return this.examService.syncParticipants(id, dto);
   }
+  @Post(':id/participants/add') add(@Param('id') id: string, @Body() dto: SyncParticipantsDto) {
+    return this.examService.addParticipants(id, dto);
+  }
+  @Post(':id/participants/remove') remove(@Param('id') id: string, @Body() dto: SyncParticipantsDto) {
+    return this.examService.removeParticipants(id, dto);
+  }
 
-@Patch(':id/scores')
-saveScores(@Param('id') id: string, @Body() dto: SaveScoresDto) {
-  return this.examService.saveScores(id, dto.rows); // dto.rows: ScoreRowDto[]
-}
+
+  @Patch(':id/scores') saveScores(@Param('id') id: string, @Body() dto: SaveScoresDto) {
+    return this.examService.saveScores(id, dto.rows);
+  }
+
+
+  @Delete(':id') delete(@Param('id') id: string) { return this.examService.softDelete(id); }
+
+
+
 
 }

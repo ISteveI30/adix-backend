@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer';
 import { IsArray, ValidateNested, IsUUID, IsInt, Min, Max, IsOptional } from 'class-validator';
+import { ScoreRowDto } from './save-scores.dto';
 
 class ScoreEntry {
   @IsUUID('4')
@@ -15,6 +16,6 @@ class ScoreEntry {
 export class UpdateScoresDto {
   @IsArray()
   @ValidateNested({ each: true })
-  @Type(() => ScoreEntry)
-  items!: ScoreEntry[];
+  @Type(() => ScoreRowDto)
+  items!: ScoreRowDto[];
 }

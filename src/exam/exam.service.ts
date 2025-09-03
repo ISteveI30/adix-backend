@@ -92,7 +92,6 @@ export class ExamService {
     });
   }
 
-  /** Lista de asignados con detalleId + score para edición de notas */
   async roster(examId: string) {
     const exam = await this.prismaService.exam.findUnique({ where: { id: examId } });
     if (!exam) throw new NotFoundException('Exam not found');
@@ -100,20 +99,85 @@ export class ExamService {
     const details = await this.prismaService.examDetail.findMany({
       where: { examId },
       include: {
-        student: true,
-        interested: true,
+        student: {
+          select: {
+            id: true, firstName: true, lastName: true,
+            enrollments: {
+              where: { cycleId: exam.cycleId },
+              take: 1,
+              orderBy: { startDate: 'desc' },
+              select: { career: { select: { name: true, id: true, areaId: true } } }
+            }
+          }
+        },
+        interested: {
+          select: {
+            id: true, firstName: true, lastName: true,
+            career: { select: { id: true, name: true, areaId: true } }
+          }
+        },
       },
       orderBy: { registered: 'asc' }
     });
 
-    return details.map(d => ({
-      detailId: d.id,
-      personKey: d.studentId ?? `ext-${d.interestedId}`, // clave para front
-      firstName: d.student?.firstName ?? d.interested?.firstName ?? '',
-      lastName: d.student?.lastName ?? d.interested?.lastName ?? '',
-      type: d.studentId ? 'Matriculado' : 'Externo',
-      score: d.score ?? null,
-    }));
+    return details.map(d => {
+      const isStudent = !!d.student;
+      const career = isStudent
+        ? d.student?.enrollments?.[0]?.career
+        : d.interested?.career;
+
+      return {
+        detailId: d.id,
+        personKey: d.studentId ?? `ext-${d.interestedId}`,
+        firstName: d.student?.firstName ?? d.interested?.firstName ?? '',
+        lastName: d.student?.lastName ?? d.interested?.lastName ?? '',
+        type: isStudent ? 'Matriculado' : 'Externo',
+        careerName: career?.name ?? '-',
+        goodAnswers: d.goodAnswers ?? null,
+        wrongAnswers: d.wrongAnswers ?? null,
+        totalScore: d.totalScore ?? null,
+      };
+    });
+  }
+
+  async addParticipants(examId: string, dto: SyncParticipantsDto) {
+    const exam = await this.prismaService.exam.findUnique({ where: { id: examId } });
+    if (!exam) throw new NotFoundException('Exam not found');
+
+    const txs = [];
+    if (dto.studentIds?.length) {
+      txs.push(this.prismaService.examDetail.createMany({
+        data: dto.studentIds.map(id => ({ examId, studentId: id })),
+        skipDuplicates: true,
+      }));
+    }
+    if (dto.interestedIds?.length) {
+      txs.push(this.prismaService.examDetail.createMany({
+        data: dto.interestedIds.map(id => ({ examId, interestedId: id })),
+        skipDuplicates: true,
+      }));
+    }
+    if (txs.length) await this.prismaService.$transaction(txs);
+    return { added: (dto.studentIds?.length ?? 0) + (dto.interestedIds?.length ?? 0) };
+  }
+
+  async removeParticipants(examId: string, dto: SyncParticipantsDto) {
+    const exam = await this.prismaService.exam.findUnique({ where: { id: examId } });
+    if (!exam) throw new NotFoundException('Exam not found');
+
+    const txs = [];
+    if (dto.studentIds?.length) {
+      txs.push(this.prismaService.examDetail.deleteMany({
+        where: { examId, studentId: { in: dto.studentIds } },
+      }));
+    }
+    if (dto.interestedIds?.length) {
+      txs.push(this.prismaService.examDetail.deleteMany({
+        where: { examId, interestedId: { in: dto.interestedIds } },
+      }));
+    }
+    if (txs.length) await this.prismaService.$transaction(txs);
+    return { removed: (dto.studentIds?.length ?? 0) + (dto.interestedIds?.length ?? 0) };
   }
 
   /** Reemplaza/“sincroniza” los asignados del examen */
@@ -165,36 +229,44 @@ export class ExamService {
 
   /** Actualiza notas (score) en batch */
   async updateScores(examId: string, dto: UpdateScoresDto) {
-    const ops = dto.items.map(i =>
-      this.prismaService.examDetail.update({
-        where: { id: i.detailId },
-        data: { score: i.score ?? null }
-      })
-    );
+    const ops = dto.items.map(i => this.prismaService.examDetail.update({
+      where: { id: i.detailId },
+      data: {
+        goodAnswers: i.goodAnswers ?? null,
+        wrongAnswers: i.wrongAnswers ?? null,
+        totalScore: i.totalScore ?? null,
+      }
+    }));
     await this.prismaService.$transaction(ops);
     return { updated: dto.items.length };
   }
 
   async saveScores(examId: string, rows: ScoreRowDto[]) {
     const ids = rows.map(r => r.detailId);
-
     const valid = await this.prismaService.examDetail.findMany({
-      where: { examId, id: { in: ids } },
-      select: { id: true },
+      where: { examId, id: { in: ids } }, select: { id: true },
     });
-    const allowed = new Set(valid.map(v => v.id));
+    const ok = new Set(valid.map(v => v.id));
 
-    const txs = rows
-      .filter(r => allowed.has(r.detailId))
-      .map(r =>
-        this.prismaService.examDetail.update({
-          where: { id: r.detailId },
-          data: { score: r.score ?? null }, // undefined -> null
-        }),
-      );
-
+    const txs = rows.filter(r => ok.has(r.detailId)).map(r =>
+      this.prismaService.examDetail.update({
+        where: { id: r.detailId },
+        data: {
+          goodAnswers: r.goodAnswers ?? null,
+          wrongAnswers: r.wrongAnswers ?? null,
+          totalScore: r.totalScore ?? null,
+        }
+      })
+    );
     await this.prismaService.$transaction(txs);
     return { updated: txs.length };
+  }
+
+  async softDelete(id: string) {
+    const exam = await this.prismaService.exam.findUnique({ where: { id } });
+    if (!exam) throw new NotFoundException('Exam not found');
+    await this.prismaService.exam.update({ where: { id }, data: { deletedAt: new Date() } });
+    return { deleted: true };
   }
 
   async findOne(id: string) {

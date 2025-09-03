@@ -130,7 +130,11 @@ model ExamDetail {
   interestedId String?
   interested   Interested? @relation("InterestedExamDetails", fields: [interestedId], references: [id])
 
-  score      Int?
+  //score      Int?
+  goodAnswers  Int?   @default(0) 
+  wrongAnswers Int?   @default(0) 
+  totalScore   Int?   @default(0) 
+
   status     StatusExam?
   registered DateTime    @default(now())
 

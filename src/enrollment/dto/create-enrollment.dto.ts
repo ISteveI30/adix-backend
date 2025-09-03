@@ -77,12 +77,12 @@ export class CreateEnrollmentDto {
   @Min(1, { message: 'numInstallments debe ser al menos 1' })
   numInstallments?: number;
 
-  // // ✅ Datos del Tutor
+  // //  Datos del Tutor
   // @ValidateNested()
   // @Type(() => CreateTutorDto)
   // tutor: CreateTutorDto;
 
-  // // ✅ Datos del Estudiante
+  // //  Datos del Estudiante
   // @ValidateNested()
   // @Type(() => StudentDto)
   // student: StudentDto;
