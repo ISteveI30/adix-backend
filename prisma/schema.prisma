@@ -81,7 +81,7 @@ model Interested {
 
 model Tutor {
   id          String    @id @default(uuid())
-  dni         String    @unique
+  dni         String?    @unique
   firstName   String
   lastName    String
   email       String?   @unique

@@ -17,9 +17,11 @@ export class StudentDto {
   dni?     :string
 
   @IsEmail()
-  email     :string  
+  @IsOptional()
+  email?     :string  
 
   @IsString()
+  @IsOptional()
   phone?     :string   
 
   @IsString()

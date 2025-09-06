@@ -6,10 +6,12 @@ export class CreateCycleDto {
   name: string
 
   @IsDate()
-  createdAt: Date;
+  @IsOptional()
+  createdAt?: Date;
 
   @IsDate()
-  updatedAt: Date;
+  @IsOptional()
+  updatedAt?: Date;
 
   @IsOptional()
   @IsDate()
@@ -18,10 +20,12 @@ export class CreateCycleDto {
   // enrollments  :Enrollment[]
   // exams        :Exam[]
   @IsString()
-  @IsNotEmpty()
-  careerId: string;
+//  @IsNotEmpty()
+  @IsOptional()
+  careerId?: string;
 
   @IsString()
-  @IsNotEmpty()
-  cycleId: string;
+  //@IsNotEmpty()
+  @IsOptional()
+  cycleId?: string;
 }

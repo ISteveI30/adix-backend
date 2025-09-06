@@ -12,29 +12,59 @@ export class TutorService {
     private prismaService: PrismaService
   ) { }
 
-  async checkDniAvailability(dni: string): Promise<{ available: boolean; tutor?: Tutor }> {
+  //async checkDniAvailability(dni: string): Promise<{ available: boolean; tutor?: Tutor }> {
+  //  const tutor = await this.prismaService.tutor.findUnique({
+  //    where: { dni },
+  //    include: { students: true }
+  //  });
+  //  return {
+  //    available: !tutor,
+  //    tutor: tutor || undefined,
+  //  };
+  //}
+
+  async checkDniAvailability(dni?: string): Promise<{ available: boolean; tutor?: Tutor }> {
+    if (!dni) return { available: true, tutor: undefined }; // <-- clave
     const tutor = await this.prismaService.tutor.findUnique({
       where: { dni },
       include: { students: true }
     });
-    return {
-      available: !tutor,
-      tutor: tutor || undefined,
-    };
+    return { available: !tutor, tutor: tutor || undefined };
   }
 
-  async create(createTutorDto: CreateTutorDto) {
+  //async create(createTutorDto: CreateTutorDto) {
+  // 
+  //  const { available } = await this.checkDniAvailability(createTutorDto.dni);
+  //  if (!available) {
+  //    throw new ConflictException('El tutor con este DNI ya existe.');
+  //  }
+  //  const emailExists = await this.prismaService.tutor.findUnique({
+  //    where: { email: createTutorDto.email },
+  //  });
+  //  if (emailExists) {
+  //    throw new ConflictException('El correo electrónico ya está en uso.');
+  //  }
+  //  return await this.prismaService.tutor.create({
+  //    data: createTutorDto,
+  //    include: { students: true },
+  //  });
+  //}
 
-    const { available } = await this.checkDniAvailability(createTutorDto.dni);
-    if (!available) {
-      throw new ConflictException('El tutor con este DNI ya existe.');
+  async create(createTutorDto: CreateTutorDto) {
+    // DNI opcional
+    if (createTutorDto.dni) {
+      const { available } = await this.checkDniAvailability(createTutorDto.dni);
+      if (!available) throw new ConflictException('El tutor con este DNI ya existe.');
     }
-    const emailExists = await this.prismaService.tutor.findUnique({
-      where: { email: createTutorDto.email },
-    });
-    if (emailExists) {
-      throw new ConflictException('El correo electrónico ya está en uso.');
+
+    // Email opcional
+    if (createTutorDto.email) {
+      const emailExists = await this.prismaService.tutor.findUnique({
+        where: { email: createTutorDto.email },
+      });
+      if (emailExists) throw new ConflictException('El correo electrónico ya está en uso.');
     }
+
     return await this.prismaService.tutor.create({
       data: createTutorDto,
       include: { students: true },

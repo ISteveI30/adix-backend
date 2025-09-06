@@ -1,5 +1,6 @@
 import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator"
 import { TutorTypeList } from "../../common/enums/type-tutor.enum"
+import { Transform } from 'class-transformer';
 
 type TutorType = 'TUTOR' | 'PADRE' | 'MADRE' 
 
@@ -7,8 +8,9 @@ type TutorType = 'TUTOR' | 'PADRE' | 'MADRE'
 export class CreateTutorDto {
   @MaxLength(10)
   @MinLength(8)
-  @IsNotEmpty()
-  dni         : string   
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  @IsOptional()
+  dni?         : string   
 
   @IsString()
   @IsNotEmpty()
@@ -20,14 +22,17 @@ export class CreateTutorDto {
   @MinLength(2)
   lastName    :string
 
-  @IsEmail()
+  //@IsEmail()
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @MinLength(10)
-  email      :string  
+  email?      :string  
 
   @IsNotEmpty()
   @MinLength(9)
-  phone1      :string 
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  @IsOptional()
+  phone1?      :string 
   
   @IsString()
   @IsOptional()
