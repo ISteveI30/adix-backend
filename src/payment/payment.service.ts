@@ -59,7 +59,7 @@ export class PaymentService {
       throw new NotFoundException(`Cuenta por cobrar con ID ${dto.accountReceivableId} no encontrada`);
     }
 
-    if (dto.amountPaid <= 0) {
+    if (dto.amountPaid < 0) {
       throw new BadRequestException('El monto pagado no puede ser menor o igual a cero');
     }
 
