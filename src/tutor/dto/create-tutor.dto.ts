@@ -2,7 +2,7 @@ import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength
 import { TutorTypeList } from "../../common/enums/type-tutor.enum"
 import { Transform } from 'class-transformer';
 
-type TutorType = 'TUTOR' | 'PADRE' | 'MADRE' 
+type TutorType = 'TUTOR' | 'PADRE' | 'MADRE'
 
 
 export class CreateTutorDto {
@@ -10,45 +10,58 @@ export class CreateTutorDto {
   @MinLength(8)
   @Transform(({ value }) => (value === '' ? undefined : value))
   @IsOptional()
-  dni?         : string   
+  dni?: string
 
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
-  firstName        :string
+  firstName: string
 
   @IsString()
   @IsNotEmpty()
   @MinLength(2)
-  lastName    :string
+  lastName: string
 
   //@IsEmail()
   @IsOptional()
   @Transform(({ value }) => (value === '' ? undefined : value))
   @MinLength(10)
-  email?      :string  
+  email?: string
 
   @IsNotEmpty()
   @MinLength(9)
   @Transform(({ value }) => (value === '' ? undefined : value))
   @IsOptional()
-  phone1?      :string 
-  
+  phone1?: string
+
   @IsString()
   @IsOptional()
-  phone2?     :string
+  phone2?: string
 
   @IsEnum(
     TutorTypeList,
-    {message: `Invalid type. The type must be a valid value of ${TutorTypeList}`}
+    { message: `Invalid type. The type must be a valid value of ${TutorTypeList}` }
   )
-  type        :TutorType
+  type: TutorType
 
   @IsString()
   @IsOptional()
-  address?     :string
+  address?: string
 
   @IsString()
   @IsOptional()
-  observation? :string 
+  observation?: string
+
+
+  @IsString()
+  @IsOptional()
+  otherFirstName?: string
+  
+  @IsString()
+  @IsOptional()
+  otherLastName?: string
+
+  @IsString()
+  @IsOptional()
+  otherPhone?: string
 }

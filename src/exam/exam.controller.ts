@@ -6,6 +6,7 @@ import { UpdateScoresDto } from "./dto/update-scores.dto";
 import { SyncParticipantsDto } from "./dto/sync-participants.dto";
 import { UpdateExamDto } from "./dto/update-exam.dto";
 import { SaveScoresDto } from './dto/save-scores.dto';
+import { SavePaymentsDto } from './dto/save-payments.dto';
 
 @Controller('exam')
 export class ExamController {
@@ -54,7 +55,13 @@ export class ExamController {
     return this.examService.saveScores(id, dto.rows);
   }
 
-
+  @Patch(':id/payments')
+  async savePayments(
+    @Param('id') id: string,
+    @Body() dto: SavePaymentsDto,
+  ) {
+    return this.examService.savePayments(id, dto.rows);
+  }
   @Delete(':id') delete(@Param('id') id: string) { return this.examService.softDelete(id); }
 
 

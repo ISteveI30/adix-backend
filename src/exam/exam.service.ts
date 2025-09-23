@@ -1,26 +1,21 @@
 import { PrismaService } from "src/prisma/prisma.service";
 import { CreateExamDto } from "./dto/create-exam.dto";
 import { Injectable, NotFoundException } from "@nestjs/common";
-import { CreateExamDetailDto } from "../exam-detail/dto/create-examdetail.dto";
 import { CreateExamWithDetailsDto } from "./dto/create-exam-with-details.dto";
 import { UpdateExamDto } from "./dto/update-exam.dto";
 import { SyncParticipantsDto } from "./dto/sync-participants.dto";
 import { UpdateScoresDto } from "./dto/update-scores.dto";
 import { ScoreRowDto } from "./dto/save-scores.dto";
+import { PaymentRowDto } from "./dto/save-payments.dto";
 
 @Injectable()
 export class ExamService {
-  constructor(
-    private readonly prismaService: PrismaService,
-  ) { }
+  constructor(private readonly prismaService: PrismaService) {}
 
   async create(dto: CreateExamDto) {
-    return this.prismaService.exam.create({
-      data: {
-        ...dto
-      },
-    });
+    return this.prismaService.exam.create({ data: { ...dto } });
   }
+
   async createWithDetails(dto: CreateExamWithDetailsDto) {
     return this.prismaService.$transaction(async (tx) => {
       const exam = await tx.exam.create({
@@ -68,7 +63,7 @@ export class ExamService {
         id: true,
         title: true,
         modality: true,
-        _count: { select: { examdetails: true } }, // cuenta studentId + interestedId
+        _count: { select: { examdetails: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -80,7 +75,6 @@ export class ExamService {
       assigned: r._count.examdetails,
     }));
   }
-
 
   async update(id: string, dto: UpdateExamDto) {
     const exam = await this.prismaService.exam.findUnique({ where: { id } });
@@ -136,6 +130,11 @@ export class ExamService {
         goodAnswers: d.goodAnswers ?? null,
         wrongAnswers: d.wrongAnswers ?? null,
         totalScore: d.totalScore ?? null,
+
+        // NUEVOS CAMPOS DE PAGO
+        amountPaid: d.amountPaid != null ? Number(d.amountPaid) : null,
+        typePaid: d.typePaid ?? null,
+        statusPaid: d.statusPaid ?? null,
       };
     });
   }
@@ -180,7 +179,6 @@ export class ExamService {
     return { removed: (dto.studentIds?.length ?? 0) + (dto.interestedIds?.length ?? 0) };
   }
 
-  /** Reemplaza/“sincroniza” los asignados del examen */
   async syncParticipants(examId: string, dto: SyncParticipantsDto) {
     const exam = await this.prismaService.exam.findUnique({ where: { id: examId } });
     if (!exam) throw new NotFoundException('Exam not found');
@@ -203,7 +201,6 @@ export class ExamService {
     const toRemoveExternals = [...currentExternals].filter(id => !desiredExternals.has(id));
 
     await this.prismaService.$transaction([
-      // add
       this.prismaService.examDetail.createMany({
         data: toAddStudents.map(studentId => ({ examId, studentId })),
         skipDuplicates: true,
@@ -212,7 +209,6 @@ export class ExamService {
         data: toAddExternals.map(interestedId => ({ examId, interestedId })),
         skipDuplicates: true,
       }),
-      // remove
       this.prismaService.examDetail.deleteMany({
         where: { examId, studentId: { in: toRemoveStudents.length ? toRemoveStudents : undefined } },
       }),
@@ -262,6 +258,32 @@ export class ExamService {
     return { updated: txs.length };
   }
 
+  /** Guarda/actualiza pagos del detalle del examen */
+  async savePayments(examId: string, rows: PaymentRowDto[]) {
+    const ids = rows.map(r => r.detailId);
+    const valid = await this.prismaService.examDetail.findMany({
+      where: { examId, id: { in: ids } },
+      select: { id: true },
+    });
+    const ok = new Set(valid.map(v => v.id));
+
+    const txs = rows
+      .filter(r => ok.has(r.detailId))
+      .map(r =>
+        this.prismaService.examDetail.update({
+          where: { id: r.detailId },
+          data: {
+            amountPaid: r.amountPaid ?? null,
+            typePaid: r.typePaid ?? null,
+            statusPaid: r.statusPaid ?? null,
+          },
+        })
+      );
+
+    if (txs.length) await this.prismaService.$transaction(txs);
+    return { updated: txs.length };
+  }
+
   async softDelete(id: string) {
     const exam = await this.prismaService.exam.findUnique({ where: { id } });
     if (!exam) throw new NotFoundException('Exam not found');
@@ -274,13 +296,8 @@ export class ExamService {
     if (!exam) throw new NotFoundException('Exam not found');
     return exam;
   }
+
   async findAll() {
     return this.prismaService.exam.findMany({ where: { deletedAt: null } });
   }
-
-
-
-
-
 }
-

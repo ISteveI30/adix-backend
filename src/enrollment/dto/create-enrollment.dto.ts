@@ -36,7 +36,7 @@ export class CreateEnrollmentDto {
   admissionId: string;
 
   @IsUUID('4', { message: 'careerId debe ser un UUID válido' })
-  careerId: string;
+  careerId?: string;
 
   @IsEnum(Modality, { message: `Modality inválida. Debe ser: ${Object.values(Modality).join(', ')}` })
   modality: Modality;
