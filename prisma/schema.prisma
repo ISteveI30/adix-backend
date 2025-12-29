@@ -281,7 +281,7 @@ model AccountReceivable {
   paymentDate    DateTime
   studentId      String
   totalAmount    Decimal
-  pendingBalance Decimal
+  pendingBalance Decimal?
   status         PaymentStatus
   concept        String? // Concepto de la cuenta por cobrar (e.g., "MATRÍCULA", "PAGO CARNET")
   dueDate        DateTime // Fecha de vencimiento para el pago

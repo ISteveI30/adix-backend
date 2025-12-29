@@ -9,7 +9,7 @@ export class CreateAccountReceivableDto {
   totalAmount: number;
 
   @IsDecimal()
-  pendingBalance: number;
+  pendingBalance?: number;
 
   @IsString()
   concept: string;

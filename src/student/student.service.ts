@@ -93,38 +93,43 @@ export class StudentService {
       });
   }
 
-  // //Eliminar un estudiante, si no tiene una matrícula activa
-  async remove(id: string): Promise<{ message: string, state: boolean }> {
-    let message = ""
-    let state = false
-    if (!id) {
-      throw new NotFoundException('El id es requerido');
-    }
-    const student = await this.prismaService.student.findUnique({
-      where: { id: id },
-      include: { enrollments: true }
-    });
+  async remove(id: string): Promise<{ message: string; state: boolean }> {
+  if (!id) throw new NotFoundException("El id es requerido");
 
-    if (!student) {
-      message = `El estudiante con id ${id} no existe`;
-      state = false;
-    } else if (student.enrollments.length > 0) {
-      message = `El estudiante ${student.firstName} ${student.lastName} tiene una matrícula activa`;
-      state = false;
-    } else {
-      await this.prismaService.student.update({
-        where: { id: id },
-        data: { deletedAt: new Date() }
-      })
-      message = `El estudiante ${student.firstName} ${student.lastName} ha sido eliminado`;
-      state = true;
-    }
-    return {
-      message,
-      state
-    }
+  const student = await this.prismaService.student.findUnique({
+    where: { id },
+    select: { id: true, firstName: true, lastName: true },
+  });
+
+  if (!student) {
+    return { message: `El estudiante con id ${id} no existe`, state: false };
   }
 
+  const activeEnrollment = await this.prismaService.enrollment.findFirst({
+    where: {
+      studentId: id,
+      deletedAt: null,
+    },
+    select: { id: true },
+  });
+
+  if (activeEnrollment) {
+    return {
+      message: `El estudiante ${student.firstName} ${student.lastName} tiene una matrícula activa`,
+      state: false,
+    };
+  }
+
+  await this.prismaService.student.update({
+    where: { id },
+    data: { deletedAt: new Date() },
+  });
+
+  return {
+    message: `El estudiante ${student.firstName} ${student.lastName} ha sido eliminado`,
+    state: true,
+  };
+}
   async findStudentByName(query: string) {
     const result = await this.prismaService.student.findMany({
       where: {
